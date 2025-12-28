@@ -1,70 +1,70 @@
-# ai2query – Explainable AI-Powered SQL Agent
+# SQLmate – AI-Powered SQL Query Assistant
 
-**ai2query** is a modular, containerized, local-first AI agent that translates natural language into executable SQL queries, explains its logic, interprets PostgreSQL query plans, and self-corrects using Reflexion-style loops. Designed for secure, offline financial data analysis.
+**SQLmate** is an intelligent, containerized SQL assistant that converts natural language questions into executable SQL queries using local AI models. It provides detailed explanations of query logic, analyzes PostgreSQL execution plans, and automatically refines queries when errors occur. Built for secure, offline database analysis without cloud dependency.
 
 ---
 
 ## Core Features
 
-### 1. Natural Language → SQL
+### 1. Natural Language to SQL Conversion
 
-- Converts user queries into SQL using local LLMs via [Ollama](https://ollama.com).
-- Injects real database schema (DDL) into prompt for context-aware generation.
-- Validates table references and filters hallucinated queries.
+- Transforms plain English questions into SQL queries using local LLMs via [Ollama](https://ollama.com).
+- Automatically includes your database schema in prompts for context-aware query generation.
+- Prevents hallucinated queries by validating referenced tables and columns.
 
-### 2. SQL + Query Plan Explanation (XAI)
+### 2. Intelligent Query Explanation
 
-- Explains why specific tables, joins, or filters were used.
-- Runs `EXPLAIN (FORMAT JSON)` on successful queries.
-- Uses neuro-symbolic reasoning to describe performance characteristics and plan structure.
+- Describes the reasoning behind generated queries, including table selections and filtering logic.
+- Executes `EXPLAIN (FORMAT JSON)` on working queries to analyze performance.
+- Provides detailed breakdowns of execution plans and optimization opportunities.
 
-### 3. Reflexion Loop (Self-Healing)
+### 3. Auto-Healing Error Recovery
 
-- If SQL execution fails, captures the DB error.
-- LLM retries up to 3 times, refining the query each time based on error messages.
-- Logs recovery attempts and success metrics.
+- Detects SQL execution failures and captures error messages.
+- Automatically retries up to 3 times, improving the query based on error feedback.
+- Tracks all recovery attempts and documents successful resolutions.
 
-### 4. Model Evaluation & Analysis
+### 4. Performance Evaluation
 
-- Benchmarks LLM output using:
-  - Execution match vs reference queries
-  - BLEU/ROUGE overlap scores
-  - Reflexion recovery rate
-  - Manual explanation scoring (optional)
-- Test suite included with NL → SQL ground truth examples.
+- Measures LLM effectiveness using:
+  - Query execution validation
+  - BLEU/ROUGE text similarity scores
+  - Success rate across retry attempts
+  - Quality scoring for explanations
+- Includes test suite with sample natural language queries.
 
-### 5. FastAPI Microservice
+### 5. REST API Backend
 
-- Exposes REST endpoints:
-  - `/connect`: inject schema
-  - `/generate`: run query generation + explanation
-  - `/logs/eval`: evaluation results
-  - `/health/db`: DB healthcheck
+- Simple HTTP endpoints for all functionality:
+  - `/connect`: Set up database connection
+  - `/generate`: Convert questions to SQL with explanations
+  - `/logs/eval`: Review evaluation metrics
+  - `/health/db`: Verify database status
 
-### 6. Fully Containerized Deployment
+### 6. Complete Docker Containerization
 
-Built with Docker Compose for isolated local development.
+Fully containerized with Docker Compose for easy local deployment.
 
-**Services:**
+**Included Services:**
 
-- `api`: FastAPI backend
-- `ollama`: LLM (e.g., `sqlcoder:7b-q4_0`)
-- `postgres`: financial data store
-- `streamlit`: optional UI (chat-style interface)
+- `api`: FastAPI application server
+- `ollama`: Local LLM provider (e.g., `sqlcoder:7b-q4_0`)
+- `postgres`: PostgreSQL database
+- `streamlit`: Web-based chat interface
 
 ---
 
 ## Tech Stack
 
-| Layer            | Technology              |
-|------------------|--------------------------|
-| Frontend UI      | Streamlit               |
-| Backend API      | FastAPI                 |
-| LLM              | Ollama (`sqlcoder:7b`)  |
-| Database         | PostgreSQL              |
-| ORM              | SQLAlchemy              |
-| Evaluation       | BLEU, Execution Match   |
-| Deployment       | Docker & Docker Compose |
+| Layer       | Technology              |
+| ----------- | ----------------------- |
+| Frontend UI | Streamlit               |
+| Backend API | FastAPI                 |
+| LLM         | Ollama (`sqlcoder:7b`)  |
+| Database    | PostgreSQL              |
+| ORM         | SQLAlchemy              |
+| Evaluation  | BLEU, Execution Match   |
+| Deployment  | Docker & Docker Compose |
 
 ---
 
@@ -72,7 +72,7 @@ Built with Docker Compose for isolated local development.
 
 ### `POST /connect`
 
-Connects to a PostgreSQL instance and injects schema into the LLM prompt.
+Establishes a connection to PostgreSQL and loads the database schema.
 
 ```json
 {
@@ -86,7 +86,7 @@ Connects to a PostgreSQL instance and injects schema into the LLM prompt.
 
 ### `POST /generate`
 
-Generates, executes, and explains a SQL query from natural language.
+Accepts a natural language question and returns a generated SQL query with explanation and performance analysis.
 
 ```json
 {
@@ -94,7 +94,7 @@ Generates, executes, and explains a SQL query from natural language.
 }
 ```
 
-Returns:
+Response example:
 
 ```json
 {
@@ -109,7 +109,7 @@ Returns:
 
 ### `GET /health/db`
 
-Checks DB connection.
+Verifies database connection status.
 
 ---
 
@@ -121,47 +121,39 @@ Checks DB connection.
 
 - Docker Compose
 
-
 ---
 
-### 1. Clone the Repo
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourname/ai2query.git
-cd ai2query
+git clone https://github.com/prasadb488/sqlmate.git
+cd sqlmate
 ```
 
----
-
-### 2. Start All Services
+### 2. Launch All Services
 
 ```bash
 docker-compose up --build
 ```
 
-This will start:
+This starts all components:
 
-- `api`: FastAPI backend
-
-- `ollama`: LLM server (sqlcoder or phi)
-
-- `postgres`: database with seed data
-
-- `streamlit`: frontend
-
+- `api`: FastAPI backend running on port 8000
+- `ollama`: LLM service (sqlcoder or phi models)
+- `postgres`: Database server with initial data
+- `streamlit`: Interactive web interface on port 8501
 
 ---
 
-## Test Dataset (examples)
+## Example Queries
 
-- `"Get top 5 customers by revenue"`
+Try these natural language questions in the interface:
 
-- `"Show average salary by department"`
+- `"What are the top 5 customers by revenue?"`
+- `"Calculate average salary per department"`
+- `"Which accounts have negative balances?"`
 
-- `"List accounts with negative balance"`
-
-
-All test cases are located in:  
+Sample test data and queries are in:  
 `/tests/test_cases.json`
 
 ---
@@ -169,35 +161,24 @@ All test cases are located in:
 ## Project Structure
 
 ```
-ai2query/
+sqlmate/
 ├── backend/
-│   ├── routes/
+│   ├── db/
 │   ├── services/
-│   ├── reflexion/
-│   ├── explain/
-│   └── evaluation/
-├── db/
-│   └── schema.sql
+│   ├── evaluation/
+│   └── main.py
+├── frontend/
+│   └── app.py
+├── ollama/
+│   └── Dockerfile
 ├── tests/
 │   └── test_cases.json
-├── prompts/
-├── logs/
-│   ├── reflexion_logs.json
-│   └── eval_results.json
-├── docker/
-│   ├── Dockerfile.api
-│   ├── Dockerfile.ui
-│   └── docker-compose.yml
+├── docker-compose.yml
+└── README.md
 ```
 
 ---
 
 ## License
 
-MIT – use freely for educational or commercial purposes.
-
----
-
-Still a work in progress...
-
----
+MIT – Open for educational and commercial use.
