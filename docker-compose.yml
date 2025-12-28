@@ -1,0 +1,50 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    container_name: ai2query_postgres
+    environment:
+      POSTGRES_DB: ai2query
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai2query_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint: /bin/sh
+    command: -c "ollama serve & sleep 5 && ollama pull sqlcoder:7b-q4_0 && tail -f /dev/null"
+
+
+
+
+  backend:
+    build: ./backend
+    container_name: ai2query_backend
+    environment:
+      OLLAMA_HOST: ollama
+      OLLAMA_PORT: "11434"
+      OLLAMA_MODEL: "phi:2.7b"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - ollama
+
+  frontend:
+    build: ./frontend
+    container_name: ai2query_frontend
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+
+volumes:
+  ollama_data:
